@@ -1,0 +1,78 @@
+# console
+rails new fgdemo
+
+# ./Gemfile
+group :development, :test do
+  gem 'rspec-rails'
+  gem 'factory_girl_rails'
+	gem 'rspec_multi_matchers' # expressive
+end
+
+group :development do
+	# required to generate factory_girl fixtures under rails 3 as of 20110518
+	gem 'rails3-generators'
+end
+
+# console
+bundle
+
+rails g rspec:install
+
+# output
+create  .rspec
+create  spec
+create  spec/spec_helper.rb
+
+
+# ./config/application.rb (inside Application class)
+config.generators do |g|
+  g.fixture_replacement :factory_girl
+end
+
+# ./spec/spec_helper.rb
+require 'factory_girl'
+#config.fixture_path = "#{::Rails.root}/spec/fixtures"
+
+# console
+rails g model AdTargeting ad_id:integer start_date:datetime end_date:datetime
+
+rake db:migrate
+
+# ./spec/models/ad_targeting_spec.rb
+require 'spec_helper'
+
+describe AdTargeting do  
+  describe "date_between scope" do
+    it "returns only the :valid_ad_with_date_range_for_today" do
+      Factory.create(:invalid_ad_for_today)
+      Factory.create(:valid_ad_with_date_range_for_today)
+      AdTargeting.date_between(DateTime.current).should have(1).things
+    end
+  end
+end
+
+# ./spec/factories/ad_targeting.rb
+Factory.define :empty_ad, :class => AdTargeting do |a|
+  a.ad_id        0
+  a.start_date   DateTime.current.beginning_of_day
+  a.end_date     DateTime.current.end_of_day
+  # other attribute defaults ...
+end
+
+Factory.define :invalid_ad_for_today, :parent => :empty_ad do |a|
+  a.ad_id        2
+  a.start_date   DateTime.current.beginning_of_day - 2
+  a.end_date     DateTime.current.end_of_day - 2
+end
+
+Factory.define :valid_ad_with_date_range_for_today, :parent => :empty_ad do |a|
+  a.ad_id        3
+  a.start_date   DateTime.current.beginning_of_day - 2
+  a.end_date     DateTime.current.end_of_day + 2
+end
+
+# ./app/models/ad_targeting.rb
+scope :date_between, lambda { |date| where('start_date <= ? and end_date >= ?', date, date) }
+
+# console
+tail -f ./log/test.log

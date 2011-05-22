@@ -40,7 +40,7 @@ module Fgdemo
     config.filter_parameters += [:password]
     
     config.generators do |g|
-      g.test_framework :rspec, :fixture => true, :views => false, :fixture_replacement => :factory_girl
+      g.test_framework :rspec, :fixture => true, :views => false, :fixture_replacement => :factory_girl, :view_specs => false
       g.fixture_replacement :factory_girl, :dir => 'spec/factories'
     end
   end
